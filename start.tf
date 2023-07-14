@@ -5,43 +5,66 @@ provider "aws" {
   secret_key = "6vcaUdNY/S7c+Q0Lho8xUhgEZt9kzbdKWyG6ZQd8"
 }
 
+// Create ec2 instance
+resource "aws_instance" "EC2-Instance" {
+  availability_zone      = "eu-north-1a"
+  ami                    = "ami-0989fb15ce71ba39e"
+  instance_type          = "t3.micro"
+  key_name               = "sv111"
+  vpc_security_group_ids = [aws_security_group.DefaultTerraformSG.id]
 
-// Create IAM user
-resource "aws_iam_user" "my_user" {
-  name = "my-user"
+  // Create main disk
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_size = 15
+    volume_type = "standard"
+    tags = {
+      Name = "root-disk"
+    }
+  }
+
+  // User script
+  user_data = file("files/install.sh")
+
+  // Tags
+  tags = {
+    Name = "EC2-Instance"
+  }
 }
 
-// Attach IAM user to the group
-resource "aws_iam_group_membership" "my_membership" {
-  name  = "my-membership"
-  users = [aws_iam_user.my_user.name]
-  group = aws_iam_group.my_group.name
-}
+// Create security group
+resource "aws_security_group" "DefaultTerraformSG" {
+  name        = "DefaultTerraformSG"
+  description = "Allow 22, 80, 443 inbound taffic"
 
-// Create IAM group
-resource "aws_iam_group" "my_group" {
-  name = "my-group"
-}
+  ingress {
+    description = "Allow HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-// Create IAM group policy
-resource "aws_iam_policy" "my_group_policy" {
-  name        = "my-group-policy"
-  description = "My IAM group policy"
+  ingress {
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = ["ec2:Describe*"]
-        Resource = "*"
-      }
-    ]
-  })
-}
+  ingress {
+    description = "Allow SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-// Attach policy to the IAM group
-resource "aws_iam_group_policy_attachment" "my_attachment" {
-  group      = aws_iam_group.my_group.name
-  policy_arn = aws_iam_policy.my_group_policy.arn
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
