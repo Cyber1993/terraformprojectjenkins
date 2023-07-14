@@ -4,30 +4,29 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Шаг для клонирования репозитория, если необходимо
-                // Например, если файлы конфигурации Terraform находятся в репозитории
+                // Perform the checkout step
                 checkout scm
             }
         }
         
         stage('Terraform Init') {
             steps {
-                // Инициализация Terraform
+                // Run Terraform init
                 sh 'terraform init'
             }
         }
         
         stage('Terraform Plan') {
             steps {
-                // Создание плана Terraform
-                sh 'terraform plan'
+                // Run Terraform plan
+                sh 'terraform plan -out=tfplan'
             }
         }
         
         stage('Terraform Apply') {
             steps {
-                // Применение изменений Terraform
-                sh 'terraform apply'
+                // Run Terraform apply with auto-approve flag
+                sh 'terraform apply -auto-approve tfplan'
             }
         }
     }
