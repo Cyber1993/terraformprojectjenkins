@@ -1,8 +1,8 @@
 // Provider
 provider "aws" {
   region     = "eu-north-1"
-  access_key = "AKIA3JWEQ5JLXR5MPQNZ"
-  secret_key = "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"
+  access_key = "AKIA3JWEQ5JLZBBCDUOS"
+  secret_key = "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"
 }
 
 // Create ec2 instance
